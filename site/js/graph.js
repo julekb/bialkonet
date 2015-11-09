@@ -90,7 +90,7 @@ function DistanceGraph(domId) {
   var optionList = [
     {name: "maintype", label: "serotype (main)"},
     {name: "subtype", label: "serotype (subtype)"},
-    {name: "year", label: "year"},
+    {name: "yearNum", label: "year"},
     {name: "host_class", label: "host"},
     {name: "continent", label: "continent"},
   ];
@@ -112,7 +112,7 @@ function DistanceGraph(domId) {
       },
       models: {
         r: 4,
-        charge: -110,
+        charge: -120,
         gravity: 2.5
       },
     };
@@ -123,6 +123,18 @@ function DistanceGraph(domId) {
 
     this.nodes.forEach(function (d) {
       d.maintype = "H" + d.H;
+      d.search = [d.p_id, d.template_id, d.database, d.subtype, d.host, d.location, d.continent, d.year].join(" ").toLowerCase();
+    });
+
+    this.nodes.forEach(function (d) {
+      var year = parseInt(d.year);
+      if (!year) {
+        d.yearNum = "N/A";
+      } else if ((year < 2000) && (year > 1919)) {
+        d.yearNum = String(year).slice(0, 3) + "0s";
+      } else {
+        d.yearNum = String(year);
+      }
     });
 
     this.force = this.force
@@ -165,6 +177,24 @@ function DistanceGraph(domId) {
     this.force.on("tick", function() {
         node.attr("cx", function(d) { return d.x; })
             .attr("cy", function(d) { return d.y; });
+    });
+
+    d3.select("#search").on("input", function () {
+      var hx = /H[x\d]+N[x\d]+/;
+      var regexes = this.value
+        .toLowerCase()
+        .split(" ")
+        .map(function (s) {
+          if (hx.test(s)) {
+            return new RegExp(s.replace(/x/g, "\\d+"));
+          } else {
+            return new RegExp(s);
+          }
+        });
+
+      node.style('opacity', function (d) {
+        return _.every(regexes, function (re) { return re.test(d.search); }) ? null : 0.1;
+      });
     });
 
     this.legend.node = node;
@@ -255,7 +285,8 @@ function GraphOptions(parentDom, optionList, legend){
       host_class: 'count',
       maintype: function (d) { return -d.H; },
       subtype: function (d) { return -d.H * 1000 - d.N; },
-      continent: 'count'
+      continent: 'count',
+      yearNum: function (d) { return parseInt(d.yearNum); },
     };
 
     options
@@ -263,21 +294,21 @@ function GraphOptions(parentDom, optionList, legend){
         return d.name == field ? 'black' : 'grey';
       });
 
-    // hard-coded, but it will be changed
-    if (field != 'year') {
+    // it modifies the input node data, but in a harmless way
+    var aggregated = _.chain(this.nodes)
+      .groupBy(field)
+      .map(function (val, key) {
+        return _.assign(val[0], {count: val.length});
+      })
+      .sortBy(sb[field])
+      .reverse()
+      .map(function (d, i) {
+        return _.assign(d, {i: i, name: d[field]});
+      })
+      .value();
 
-      // it modifies the input node data, but in a harmless way
-      var aggregated = _.chain(this.nodes)
-        .groupBy(field)
-        .map(function (val, key) {
-          return _.assign(val[0], {count: val.length});
-        })
-        .sortBy(sb[field])
-        .reverse()
-        .map(function (d, i) {
-          return _.assign(d, {i: i, name: d[field]});
-        })
-        .value();
+    // hard-coded, but it will be changed
+    if (field != 'yearNum') {
 
       var colorMap = _.indexBy(aggregated, field);
 
@@ -308,11 +339,11 @@ function GraphOptions(parentDom, optionList, legend){
         .domain([1, yearMax + 1 - yearMin])
         .range(['red', 'blue']);
 
-      // right now just clearning the categorical legend 
-      legend.update([], field);
+      legend.update(aggregated, field, colorScale);
 
+      // need to make colors on nodes the same as for the legend (linear vs ordinal)
       this.node.style("fill", function(d) {
-        return colorScale(parseInt(yearMax + 1 - d.year)); 
+        return isFinite(d.yearNum) ? colorScale(yearMax + 1 - d.yearNum) : "#000"; 
       });
 
     }
