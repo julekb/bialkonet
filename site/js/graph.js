@@ -49,7 +49,11 @@ function DistanceGraph(domId) {
         .on('click', function (d) {
           thisDG.nodeDataset = d.name;
           thisDG.force.stop();
+          /*
           d3.csv("data/metadata_" + d.name + ".csv", function(error, nodes) {
+            thisDG.updateNodes(nodes);
+            */
+          d3.csv("data/distance_divided/metadata_" + d.name + "_4wa2.csv", function(error, nodes) {
             thisDG.updateNodes(nodes);
           });
 
@@ -75,8 +79,12 @@ function DistanceGraph(domId) {
         .on('click', function (d) {
           thisDG.linkDataset = d.name;
           thisDG.force.stop();
+         // /*
           d3.csv("data/distance_" + thisDG.nodeDataset + "_" + d.name + ".csv", function(error, links) {
             thisDG.updateLinks(links);
+          //  */
+          //d3.csv("data/distance_divided/distance" + thisDG.nodeDataset + "_" + d.name + "_without_4wa2.csv",
+     // function(error, links) { thisDG.updateLinks(links);
           });
 
           menu
@@ -205,8 +213,12 @@ function DistanceGraph(domId) {
     proteinViewer.clear();
     sequenceViewer.clear();
 
+///*
     d3.csv("data/distance_" + thisDG.nodeDataset + "_" + thisDG.linkDataset + ".csv", function(error, links) {
       thisDG.updateLinks(links);
+      //*/
+    //d3.csv("data/distance_divided/distance" + thisDG.nodeDataset + "_" + thisDG.linkDataset + "_without_4wa2.csv",
+      //function(error, links) { thisDG.updateLinks(links);
     });
 
   };
