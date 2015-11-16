@@ -1,3 +1,11 @@
+function DataConcat(url1, url2) {
+  data1 = d3.csv(url1, function(d) {return d;});
+  data2 = d3.csv(url2, function(d) {return d;});
+  return data1.concat(data2);
+  };
+function Data(url) {
+  return d3.csv(url, function(d) {return d;});
+  };
 function DistanceGraph(domId) {
 
   var thisDG = this;
@@ -8,6 +16,7 @@ function DistanceGraph(domId) {
   var svg = d3.select("#" + domId).append("svg")
     .attr("width", width)
     .attr("height", height);
+
 
   var tooltip = new Tooltip('body');
 
@@ -28,8 +37,13 @@ function DistanceGraph(domId) {
   // defaults
   this.nodeDataset = "crystals";
   this.linkDataset = "rmsd";
-  d3.csv("data/metadata_" + this.nodeDataset + ".csv", function(error, nodes) {
-    thisDG.updateNodes(nodes);
+  ///*
+  //d3.csv("data/metadata_" + this.nodeDataset + ".csv", function(error, nodes) {
+   // thisDG.updateNodes(nodes);
+   //////thisDG.updateNodes(Data("data/distance_divided/distance_crystal_rmsd_4wa2.csv"));
+    //*/
+  d3.csv("data/distance_divided/metadata_crystals_4wa2.csv", function(error, nodes) {
+  thisDG.updateNodes(Data("data/distance_divided/metadata_crystals_4wa2.csv"));
   });
 
   var menu = svg.append("g")
