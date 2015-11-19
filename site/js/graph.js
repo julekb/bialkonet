@@ -1,11 +1,7 @@
-function DataConcat(url1, url2) {
-  data1 = d3.csv(url1, function(d) {return d;});
-  data2 = d3.csv(url2, function(d) {return d;});
-  return data1.concat(data2);
-  };
-function Data(url) {
-  return d3.csv(url, function(d) {return d;});
-  };
+var userUrl = "data/distance_divided/";
+var staticUrl = "data/";
+//var staticUrl = "static/specific/flu";
+
 function DistanceGraph(domId) {
 
   var thisDG = this;
@@ -37,18 +33,21 @@ function DistanceGraph(domId) {
   // defaults
   this.nodeDataset = "crystals";
   this.linkDataset = "rmsd";
-  ///*
-  //d3.csv("data/metadata_" + this.nodeDataset + ".csv", function(error, nodes) {
-   // thisDG.updateNodes(nodes);
-   //////thisDG.updateNodes(Data("data/distance_divided/distance_crystal_rmsd_4wa2.csv"));
-    //*/
-  d3.csv("data/distance_divided/metadata_crystals_4wa2.csv", function(error, nodes) {
-  thisDG.updateNodes(Data("data/distance_divided/metadata_crystals_4wa2.csv"));
+
+ d3.csv( staticUrl+"distance_divided/metadata_"+thisDG.nodeDataset+"_without_4wa2.csv", function(error, nodes) {
+    if (userUrl == "") {
+    thisDG.updateNodes(nodes);
+    }
+    else {
+     d3.csv(userUrl+"metadata_"+thisDG.nodeDataset+"_4wa2.csv", function(error, nodes2){
+      thisDG.updateNodes(nodes.concat(nodes2));
+    });
+    }
   });
+
 
   var menu = svg.append("g")
     .attr("transform", "translate(20, 20)");
-
   menu.selectAll(".node-file")
     .data(nodeDatasets)
     .enter()
@@ -63,11 +62,8 @@ function DistanceGraph(domId) {
         .on('click', function (d) {
           thisDG.nodeDataset = d.name;
           thisDG.force.stop();
-          /*
+          ///*
           d3.csv("data/metadata_" + d.name + ".csv", function(error, nodes) {
-            thisDG.updateNodes(nodes);
-            */
-          d3.csv("data/distance_divided/metadata_" + d.name + "_4wa2.csv", function(error, nodes) {
             thisDG.updateNodes(nodes);
           });
 
@@ -96,9 +92,7 @@ function DistanceGraph(domId) {
          // /*
           d3.csv("data/distance_" + thisDG.nodeDataset + "_" + d.name + ".csv", function(error, links) {
             thisDG.updateLinks(links);
-          //  */
-          //d3.csv("data/distance_divided/distance" + thisDG.nodeDataset + "_" + d.name + "_without_4wa2.csv",
-     // function(error, links) { thisDG.updateLinks(links);
+
           });
 
           menu
@@ -115,6 +109,7 @@ function DistanceGraph(domId) {
     {name: "yearNum", label: "year"},
     {name: "host_class", label: "host"},
     {name: "continent", label: "continent"},
+    {name: "owner", label: "owner"},
   ];
 
   this.legend = new Legend('#d3graph svg');
@@ -145,7 +140,7 @@ function DistanceGraph(domId) {
 
     this.nodes.forEach(function (d) {
       d.maintype = "H" + d.H;
-      d.search = [d.p_id, d.template_id, d.database, d.subtype, d.host, d.location, d.continent, d.year].join(" ").toLowerCase();
+      d.search = [d.p_id,d.owner, d.template_id, d.database, d.subtype, d.host, d.location, d.continent, d.year].join(" ").toLowerCase();
     });
 
     this.nodes.forEach(function (d) {
@@ -227,12 +222,8 @@ function DistanceGraph(domId) {
     proteinViewer.clear();
     sequenceViewer.clear();
 
-///*
     d3.csv("data/distance_" + thisDG.nodeDataset + "_" + thisDG.linkDataset + ".csv", function(error, links) {
       thisDG.updateLinks(links);
-      //*/
-    //d3.csv("data/distance_divided/distance" + thisDG.nodeDataset + "_" + thisDG.linkDataset + "_without_4wa2.csv",
-      //function(error, links) { thisDG.updateLinks(links);
     });
 
   };
