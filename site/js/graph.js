@@ -1,6 +1,7 @@
-var userUrl = "data/distance_divided/";
-var staticUrl = "data/";
-//var staticUrl = "static/specific/flu";
+var userUrl = "";
+var defaultUrl = "data/";
+// defaultUrl - folder with data for our 'old' data
+// userUrl - folder which should be passed from Flask/web containing users data
 
 function DistanceGraph(domId) {
 
@@ -33,17 +34,17 @@ function DistanceGraph(domId) {
   // defaults
   this.nodeDataset = "crystals";
   this.linkDataset = "rmsd";
-
- d3.csv( staticUrl+"distance_divided/metadata_"+thisDG.nodeDataset+"_without_4wa2.csv", function(error, nodes) {
-    if (userUrl == "") {
-    thisDG.updateNodes(nodes);
-    }
-    else {
-     d3.csv(userUrl+"metadata_"+thisDG.nodeDataset+"_4wa2.csv", function(error, nodes2){
-      thisDG.updateNodes(nodes.concat(nodes2));
+//default metadata
+  d3.csv("data/metadata_crystals.csv", function(error, nodes) {
+     if (userUrl == "") {
+        thisDG.updateNodes(nodes);
+     }
+     else {
+        d3.csv(userUrl + "metadata_" + thisDG.nodeDataset + "_4wa2.csv", function(error, nodes2){
+           thisDG.updateNodes(nodes.concat(nodes2));
+     });
+     }
     });
-    }
-  });
 
 
   var menu = svg.append("g")
@@ -62,10 +63,17 @@ function DistanceGraph(domId) {
         .on('click', function (d) {
           thisDG.nodeDataset = d.name;
           thisDG.force.stop();
-          ///*
-          d3.csv("data/metadata_" + d.name + ".csv", function(error, nodes) {
-            thisDG.updateNodes(nodes);
-          });
+          //metadata
+          d3.csv(defaultUrl + "metadata_" + d.name + ".csv", function(error, nodes) {
+            if (userUrl == "") {
+              thisDG.updateNodes(nodes);
+            }
+            else {
+              d3.csv(userUrl + "metadata_" + d.name + ".csv", function(error, nodes2){
+                thisDG.updateNodes(nodes.concat(nodes2));
+                });
+            }
+            });
 
           menu
             .selectAll(".node-file")
@@ -89,11 +97,20 @@ function DistanceGraph(domId) {
         .on('click', function (d) {
           thisDG.linkDataset = d.name;
           thisDG.force.stop();
-         // /*
-          d3.csv("data/distance_" + thisDG.nodeDataset + "_" + d.name + ".csv", function(error, links) {
-            thisDG.updateLinks(links);
+         // distance
 
-          });
+         d3.csv( defaultUrl + "distance_" + thisDG.nodeDataset + "_" + d.name + ".csv", function(error, links) {
+           if (userUrl == "") {
+             thisDG.updateLinks(links);
+            }
+            else {
+              d3.csv(userUrl + "distance_" + thisDG.nodeDataset + "_" + d.name + ".csv", function(error, links2){
+              thisDG.updateLinks(links.concat(links2));
+            });
+             }
+         });
+
+
 
           menu
             .selectAll(".dist-file")
@@ -221,10 +238,18 @@ function DistanceGraph(domId) {
 
     proteinViewer.clear();
     sequenceViewer.clear();
+    //distance
 
-    d3.csv("data/distance_" + thisDG.nodeDataset + "_" + thisDG.linkDataset + ".csv", function(error, links) {
-      thisDG.updateLinks(links);
-    });
+    d3.csv(defaultUrl + "distance_" + thisDG.nodeDataset + "_" + thisDG.linkDataset + ".csv", function(error, links) {
+       if (userUrl == "") {
+         thisDG.updateLinks(links);
+         }
+       else {
+         d3.csv(userUrl + "distance_" + thisDG.nodeDataset + "_" + thisDG.linkDataset + ".csv", function(error, links2){
+           thisDG.updateLinks(links.concat(links2));
+            });
+          }
+       });
 
   };
 
